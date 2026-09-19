@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use orbclkcmp_cpp in your research, please cite the software."
+title: "orbclkcmp: A C++ toolbox for GNSS orbit and clock product comparison"
+type: software
+authors:
+  - family-names: "Zhang"
+    given-names: "Yize"
+  - family-names: "Liu"
+    given-names: "Wenxuan"
+abstract: "orbclkcmp_cpp is a C++ toolbox for GNSS orbit and clock product comparison using SP3, CLK, broadcast navigation, ANTEX, and DCB/BIA products."
+keywords:
+  - GNSS
+  - orbit comparison
+  - clock comparison
+  - SISRE
+  - SP3
+  - RINEX CLK
+  - broadcast navigation
+license: "MIT"
+repository-code: "https://github.com/Greatwestking/orbclkcmp"
+date-released: "2026-07-05"
+version: "0.1.0"
