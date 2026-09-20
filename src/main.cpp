@@ -1795,42 +1795,31 @@ SatState Get_Sat_State(const ProductRuntime& runtime, const Config& config, int 
     return Sat;
 }
 
-double Median_Clk_Datum(const std::vector<double>& values, int satNum) {
+double Median_Clk_Datum(const std::vector<double>& values, int satNum, bool includeZero = false) {
     // Calculate median datum (from initial clock bias).
-    int count = 0;
+    std::vector<double> samples;
+    samples.reserve(static_cast<std::size_t>(satNum));
     for (int i = 1; i <= satNum; ++i) {
-        if (values[static_cast<std::size_t>(i)] != 0.0) {
-            ++count;
+        if (includeZero || values[static_cast<std::size_t>(i)] != 0.0) {
+            samples.push_back(values[static_cast<std::size_t>(i)]);
         }
     }
-    if (count == 0) {
+    if (samples.empty()) {
         return 0.0;
     }
 
-    for (int i = 1; i <= satNum; ++i) {
-        if (values[static_cast<std::size_t>(i)] == 0.0) {
-            continue;
-        }
-        int lowerCount = 0;
-        for (int j = 1; j <= satNum; ++j) {
-            if (values[static_cast<std::size_t>(j)] != 0.0
-                && values[static_cast<std::size_t>(i)] > values[static_cast<std::size_t>(j)]) {
-                ++lowerCount;
-            }
-        }
-        if (lowerCount == count / 2) {
-            return values[static_cast<std::size_t>(i)];
-        }
-    }
-    return 0.0;
+    // Keep the upper median for an even number of samples.
+    const auto middle = samples.begin() + samples.size() / 2;
+    std::nth_element(samples.begin(), middle, samples.end());
+    return *middle;
 }
 
-double Average_Clk_Datum(const std::vector<double>& values, int satNum) {
+double Average_Clk_Datum(const std::vector<double>& values, int satNum, bool includeZero = false) {
     // Calculate average datum (from initial clock bias).
     double sum = 0.0;
     int count = 0;
     for (int i = 1; i <= satNum; ++i) {
-        if (values[static_cast<std::size_t>(i)] == 0.0) {
+        if (!includeZero && values[static_cast<std::size_t>(i)] == 0.0) {
             continue;
         }
         sum += values[static_cast<std::size_t>(i)];
@@ -1874,7 +1863,8 @@ double Continuous_Median_Clk_Datum(const std::vector<double>& values, int satNum
     if (satelliteChanged && diffCount > 0) {
         const double med = Median_Clk_Datum(values, satNum);
         double previousMed = Median_Clk_Datum(state.PredClk, satNum);
-        const double diff = Median_Clk_Datum(diffValues, diffCount);
+        // All packed increments are valid, including zero changes.
+        const double diff = Median_Clk_Datum(diffValues, diffCount, true);
         previousMed = previousMed - state.Bias + diff;
         state.Bias = med - previousMed;
         return previousMed;
@@ -1905,7 +1895,8 @@ double Continuous_Average_Clk_Datum(const std::vector<double>& values, int satNu
     if (satelliteChanged && diffCount > 0) {
         const double med = Average_Clk_Datum(values, satNum);
         double previousMed = Average_Clk_Datum(state.PredClk, satNum);
-        const double diff = Average_Clk_Datum(diffValues, diffCount);
+        // All packed increments are valid, including zero changes.
+        const double diff = Average_Clk_Datum(diffValues, diffCount, true);
         previousMed = previousMed - state.Bias + diff;
         state.Bias = med - previousMed;
         return previousMed;
